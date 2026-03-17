@@ -8,7 +8,7 @@
 !include "LogicLib.nsh"
 
 ; ----- App metadata -----
-!define PRODUCT_VERSION "1.0.4"
+!define PRODUCT_VERSION "1.0.6"
 !define APP_NAME "AD-midPoint Reverse Sync"
 !define COMPANY_NAME "eBZ Tecnologia"
 !define INSTALL_DIR "$PROGRAMFILES32\${COMPANY_NAME}\${APP_NAME}\src"
@@ -116,6 +116,7 @@ Section "Install"
   WriteRegDWORD HKLM "SOFTWARE\${COMPANY_NAME}\AD-midPoint Sync" "allow_all" 0
   WriteRegStr HKLM "SOFTWARE\${COMPANY_NAME}\AD-midPoint Sync" "midpoint_attribute" "$ATTMIDPOINT"
   WriteRegDWORD HKLM "SOFTWARE\${COMPANY_NAME}\AD-midPoint Sync" "admin_bypass" 0
+  WriteRegDWORD HKLM "SOFTWARE\${COMPANY_NAME}\AD-midPoint Sync" "timeout_value" 10
 
 ; ----------- INSTALL FILES -----------
   ; Set install directory

@@ -145,13 +145,21 @@ public class PipeServer
                     return;
                 }
 
-                (string? oidResult, string? statusCode) = await MidPointApi.SearchUser(profile.user); // MIDPOINT API
+                (string? oidResult, string? nameResult, string? statusCode) = await MidPointApi.SearchUser(profile.user); // MIDPOINT API
 
                 if (statusCode == "no_oid")
                 {
                     writer.Write(1);
                     writer.Flush();
-                    LogManager.Log("[PipeServer] HandleClientAsync: no_oid -> skipping MidPoint change (AD already updated).");
+                    LogManager.Log($"[PipeServer] HandleClientAsync: no_oid -> skipping MidPoint change for user: {profile.user} (AD already updated).");
+                    return;
+                }
+
+                if (statusCode == "no_name")
+                {
+                    writer.Write(0);
+                    writer.Flush();
+                    LogManager.Log($"[PipeServer] HandleClientAsync: no_name -> could not authenticate in Midpoint for user: {profile.user}");
                     return;
                 }
 
@@ -159,7 +167,7 @@ public class PipeServer
                 {
                     writer.Write(0);
                     writer.Flush();
-                    LogManager.Log("[PipeServer] HandleClientAsync: failed_search.");
+                    LogManager.Log($"[PipeServer] HandleClientAsync: failed_search for user: {profile.user}.");
                     return;
                 }
 
@@ -167,15 +175,15 @@ public class PipeServer
                 {
                     writer.Write(0);
                     writer.Flush();
-                    LogManager.Log("[PipeServer] HandleClientAsync: Empty oidResult with non-error status.");
+                    LogManager.Log($"[PipeServer] HandleClientAsync: Empty oidResult with non-error status for user: {profile.user}");
                     return;
                 }
 
-                if(await MidPointApi.AuthenticateUser(profile.user, profile.pass))
+                if(await MidPointApi.AuthenticateUser(nameResult ?? profile.user, profile.pass))
                 {
                     writer.Write(1);
                     writer.Flush();
-                    LogManager.Log($"[PipeServer] HandleClientAsync: The user {profile.user} already have this password on midPoint, returning SUCCESS");
+                    LogManager.Log($"[PipeServer] HandleClientAsync: The user {profile.user} ({nameResult} in midPoint) already have this password, returning SUCCESS");
                     return;
                 }
 

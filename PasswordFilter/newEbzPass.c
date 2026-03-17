@@ -163,7 +163,7 @@ __declspec(dllexport) BOOL UsePipe(const wchar_t* name, const wchar_t* pass, BOO
 {
     const wchar_t* pipename = L"\\\\.\\pipe\\EbzPassFilter";
 
-    if (!WaitNamedPipeW(pipename, 12000)) {
+    if (!WaitNamedPipeW(pipename, 30000)) {
         WriteLog(L"UsePipe: Failed Message -> Pipe server not available...");
         return FALSE;
     }
@@ -195,7 +195,7 @@ __declspec(dllexport) BOOL UsePipe(const wchar_t* name, const wchar_t* pass, BOO
     WriteLog(L"UsePipe: Succeeded Message -> Pass update sent to Pipe Server");
 
     int reply = 0;
-    if(!ReadBytes(hPipe, &reply, 10000)){
+    if(!ReadBytes(hPipe, &reply, 60000)){
         WriteLog(L"UsePipe: ReadBytes -> Could not read the response"); 
     }
 
@@ -245,21 +245,3 @@ __declspec(dllexport) NTSTATUS __stdcall PasswordChangeNotify(PUNICODE_STRING Us
 {
     return STATUS_SUCCESS;
 }
-
-/////////////////// tests /////////////////////
-// void main(){
-//     const wchar_t* fakeuser = L"g100";
-//     const wchar_t* fakepass = L"lanternaMagica1!";
-//
-//     if (!UsePipe(fakeuser, fakepass, 1))
- //    {
- //        printf("PasswordFilter: REJECT account='%ls'", fakeuser);
- //        WriteLog(L"PasswordFilter: REJECT account='%ls'", fakeuser);
- //    }
- //    else
- //    {
- //       printf("PasswordFilter: ACCEPT account='%ls'", fakeuser);
- //       WriteLog(L"PasswordFilter: ACCEPT account='%ls'", fakeuser);
- //    }
- //    getchar();
-//}
