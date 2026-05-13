@@ -7,6 +7,7 @@ public static class MidPointApi
 {
     public static string midpointAttribute = RegistryReader.GetMidpointAttribute() ?? "name";
     public static string midpointUrl = RegistryReader.GetMidpointURL();
+    public static int midpointTimeout = RegistryReader.GetMidpointTimeout();
     private static readonly HttpClient _client = CreateClient();
 
     public static async Task<bool> AuthenticateUser(string namepattern, string newPass)
@@ -43,7 +44,7 @@ public static class MidPointApi
         }
     }
 
-    public static async Task<(string? oid, string? statusCode)> SearchUser(string namepattern)
+    public static async Task<(string? oid, string? nameRes, string? statusCode)> SearchUser(string namepattern)
     {
         HttpClient client = InitClient();
 
@@ -66,7 +67,7 @@ public static class MidPointApi
             {
                 string error = await response.Content.ReadAsStringAsync();
                 LogManager.Log($"[MidpointApi] SearchUser: Failed search, response status code: {response.StatusCode}");
-                return (null, "failed_search");
+                return (null, null, "failed_search");
             }
 
             string result = await response.Content.ReadAsStringAsync();
@@ -74,37 +75,42 @@ public static class MidPointApi
             if (!JsonHelper.Deserialize(result, out MidPointResponse? user))
             {
                 LogManager.Log($"[MidpointApi] SearchUser: Error, deserialization failed");
-                return (null, "failed_search");
+                return (null, null, "failed_search");
             }
 
             if (user.Object.UsersList == null)
             {
                 LogManager.Log($"[MidpointApi] SearchUser: No user found in MidPoint with {midpointAttribute}: {namepattern}");
-                return (null, "no_oid");
+                return (null, null, "no_oid");
             }
             
             if (string.IsNullOrEmpty(user.Object.UsersList.First().Oid))
             {
                 LogManager.Log($"[MidpointApi] SearchUser: No Oid found in MidPoint for user: {namepattern} [att: {midpointAttribute}]");
-                return (null, "no_oid");
+                return (null, null, "no_oid");
             }
 
-            return (user.Object.UsersList.First().Oid,"success");
+            if (string.IsNullOrEmpty(user.Object.UsersList.First().Name))
+            {
+                LogManager.Log($"[MidpointApi] SearchUser: No Name found in MidPoint for user: {namepattern} [att: {midpointAttribute}]");
+                return (null, null, "no_name");
+            }
+            return (user.Object.UsersList.First().Oid, user.Object.UsersList.First().Name, "success");
         }
         catch (TaskCanceledException ex)
         {
             LogManager.Log($"[MidpointApi] SearchUser: TIMEOUT/CANCELED -> {ex.GetType().Name} | Message: {ex.Message} | Inner: {ex.InnerException?.GetType().Name} - {ex.InnerException?.Message}");
-            return (null, "failed_search");
+            return (null, null, "failed_search");
         }
         catch (HttpRequestException ex)
         {
             LogManager.Log($"[MidpointApi] SearchUser: HTTP REQUEST ERROR -> {ex.Message} | Inner: {ex.InnerException?.GetType().Name} - {ex.InnerException?.Message}");
-            return (null, "failed_search");
+            return (null, null, "failed_search");
         }
         catch (Exception ex)
         {
             LogManager.Log($"[MidpointApi] SearchUser: UNEXPECTED -> {ex.GetType().FullName} | {ex.Message} | Inner: {ex.InnerException?.Message}");
-            return (null, "failed_search");
+            return (null, null, "failed_search");
         }
     }
 
@@ -155,7 +161,7 @@ public static class MidPointApi
     public static HttpClient CreateClient()
     {
         HttpClient client = new HttpClient();
-        client.Timeout = TimeSpan.FromSeconds(5);
+        client.Timeout = TimeSpan.FromSeconds(midpointTimeout);
     
         var (user, pass) = WinCred.ReadGeneric("MidPointSync");
 

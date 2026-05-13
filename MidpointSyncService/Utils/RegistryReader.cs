@@ -26,6 +26,33 @@ public static class RegistryReader
             return true;
         }
     }
+
+    public static int GetMidpointTimeout()
+    {
+        using (RegistryKey? key = Registry.LocalMachine.OpenSubKey(path))
+        {
+            if (key == null)
+            {
+                LogManager.Log("[RegistryReader] GetMidpointTimeout: Registry Key(path) not found, setting 10 seconds as default timeout");
+                return 10;
+            }
+
+            int? value = (int?)key.GetValue("timeout_value");
+            if (value == null)
+            {
+                LogManager.Log("[RegistryReader] GetMidpointTimeout: Value for timeout_value not found, setting 10 seconds as default timeout");
+                return 10;
+            }
+
+            if (value < 1 || value > 100)
+            {
+                LogManager.Log("[RegistryReader] GetMidpointTimeout: Invalid value for timeout_value, setting 10 seconds as default timeout");
+                return 10;
+            }       
+            return (int)value;
+        }
+    }
+
     public static string GetMidpointURL()
     {
         using (RegistryKey? key = Registry.LocalMachine.OpenSubKey(path))
