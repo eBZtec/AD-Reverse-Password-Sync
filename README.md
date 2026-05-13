@@ -12,10 +12,7 @@ A tool that captures password changes in **Active Directory** and automatically 
 - Automatic synchronization with midPoint via REST API
 - Secure credential handling
 - Windows installer
-- Built-in Registry Editor for easy configuration
-- Runs as a Windows Service in the background
-- Bulk testing support
-
+  
 ---
 
 ## Technologies
