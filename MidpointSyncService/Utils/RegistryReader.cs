@@ -121,4 +121,20 @@ public static class RegistryReader
             return value;
         }
     }
+
+    public static string[] GetExceptionList()
+    {
+        using (RegistryKey? key = Registry.LocalMachine.OpenSubKey(path))
+        {
+            if (key == null)
+            {
+                LogManager.Log("[RegistryReader] GetExceptionList: Registry Key(path) not found.");
+                return [];
+            }
+
+            string[] exceptionList = (string[]?)key.GetValue("dn_exception_list") ?? [];
+
+            return exceptionList;
+        }
+    }
 }
