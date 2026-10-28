@@ -145,6 +145,14 @@ public class PipeServer
                     return;
                 }
 
+                if (ADSearch.InExceptionList(profile.user)) // BYPASS FOR OUs
+                {
+                    writer.Write(1);
+                    writer.Flush();
+                    LogManager.Log($"[PipeServer] HandleClientAsync: Organizational Unit in exception list, Midpoint update bypassed for user: {profile.user} (updated on AD).");
+                    return;
+                }
+
                 (string? oidResult, string? nameResult, string? statusCode) = await MidPointApi.SearchUser(profile.user); // MIDPOINT API
 
                 if (statusCode == "no_oid")
